@@ -20,6 +20,9 @@
 /* my headers */
 #include "gui.h"
 
+/* standard headers */
+#include <string.h>
+
 /* curses */
 #include <ncurses.h>
 
@@ -35,17 +38,11 @@ int gui_default_state(struct gui_state *gstate)
 int gui_render(struct gui_state *gstate)
 {
     /* vars */
-    int res;
     int win_w, win_h;
     int win_l, win_t;
 
     /* clear screen */
-    res = erase();
-    if (res != OK) {
-        endwin();
-        perror("erase failed");
-        return -1;
-    }
+    erase();
 
     /* get screen dimensions and top-left coordinates */
     getmaxyx(stdscr, win_h, win_w);
@@ -75,6 +72,46 @@ int gui_render(struct gui_state *gstate)
 
         default:
             break;
+    }
+
+    return 0;
+}
+
+
+int gui_render_endscreen()
+{
+    /* vars */
+    int win_w, win_h;
+    int win_l, win_t;
+    int num_messages;
+    int i;
+    int row, col;
+
+    /* constants */
+    const char *messages[] = {
+        "Thanks for playing battlecurses!",
+        "Press any key to quit.",
+        "",
+        "battlecurses is free software licensed under GNU GPLv3.",
+        "Leave feedback at <https://github.com/TorinCooperBennun/battlecurses>."
+    };
+
+    /* retrieve number of messages because I can't be bothered to type this as a
+     * constant every time I update this thing */
+    num_messages = sizeof(messages) / sizeof(const char *);
+
+    /* clear screen */
+    erase();
+
+    /* get screen dimensions and top-left coordinates */
+    getmaxyx(stdscr, win_h, win_w);
+    getbegyx(stdscr, win_t, win_l);
+
+    /* print messages, centered */
+    for (i = 0; i < num_messages; ++i) {
+        row = win_t + (win_h - 1) / 2 - num_messages / 2 + i;
+        col = win_l + (win_w - 1) / 2 - strlen(messages[i]) / 2;
+        mvprintw(row, col, messages[i]);
     }
 
     return 0;

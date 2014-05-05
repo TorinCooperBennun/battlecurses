@@ -79,12 +79,11 @@ int main(int argc, char *argv[])
         c = getch();
         switch (c) {
 
-            /* quit command */
             case 'q':
-
-                /* send to quit confirmation if not already there, or quit */
+                /* send to quit confirmation */
                 if (gstate.focus != GUI_FOCUS_QUIT_CONFIRM) {
                     gstate.focus = GUI_FOCUS_QUIT_CONFIRM;
+                /* already at quit confirmation, quit */
                 } else {
                     running = 0;
                 }
@@ -95,7 +94,12 @@ int main(int argc, char *argv[])
         }
     }
 
-    /* quit curses and stop normally */
+    /* show end splash, quit curses and stop normally */
+    gui_render_endscreen();
+    timeout(-1);
+    getch();
+    erase();
+    refresh();
     endwin();
     return 0;
 }

@@ -68,4 +68,16 @@ int gui_default_state(struct gui_state *gstate);
 int gui_render(struct gui_state *gstate);
 
 
+/* gui_render_endscreen()
+ *
+ * Description:
+ * Blanks the screen, and displays end splash. Tells user to press any key to
+ * quit, but doesn't do the getch call itself.
+ *
+ * Returns:
+ * 0, always.
+ */
+int gui_render_endscreen();
+
+
 #endif
