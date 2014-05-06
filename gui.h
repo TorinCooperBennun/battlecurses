@@ -36,10 +36,46 @@ enum gui_error {
 };
 
 
+/* list of possible dialog item types */
+enum gui_dialog_item_type {
+    GUI_DIALOG_ITEM_MESSAGE,
+    GUI_DIALOG_ITEM_CHECKBOX,
+    GUI_DIALOG_ITEM_RADIOBOX
+};
+
+
 /* structure used to tell renderer what's going on in the GUI */
 struct gui_state {
     enum gui_focus focus;
     enum gui_error error;
+};
+
+
+/* structure used for dialog items */
+struct gui_dialog_item {
+    int select_pos_x;
+    int select_pos_y;
+
+    char *str;
+
+    enum gui_dialog_item_type type;
+};
+
+
+/* structure used for dialogs */
+struct gui_dialog_info {
+    struct gui_dialog_item *items;
+    int num_items;
+
+    char *title;
+
+    int centered;
+    int autosize;
+
+    int x;
+    int y;
+    int w;
+    int h;
 };
 
 
@@ -55,7 +91,7 @@ struct gui_state {
 int gui_default_state(struct gui_state *gstate);
 
 
-/* gui_render
+/* gui_render(struct gui_state *gstate)
  *
  * Description:
  * Uses curses to render the GUI according to the gui_state structure pointed to
@@ -78,6 +114,18 @@ int gui_render(struct gui_state *gstate);
  * 0, always.
  */
 int gui_render_endscreen();
+
+
+/* gui_render_dialog(struct gui_dialog_info *dinfo)
+ *
+ * Description:
+ * Renders a dialog box according to the details specified in the struct pointed
+ * to by dinfo. The game's focus should be changed accordingly. Behaviour is undefined if dinfo is NULL.
+ *
+ * Returns:
+ * 0 upon success, -1 upon error.
+ */
+int gui_render_dialog(struct gui_dialog_info *dinfo);
 
 
 #endif

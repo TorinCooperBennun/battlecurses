@@ -40,6 +40,7 @@ int gui_render(struct gui_state *gstate)
     /* vars */
     int win_w, win_h;
     int win_l, win_t;
+    struct gui_dialog_info main_menu_dialog;
 
     /* clear screen */
     erase();
@@ -48,11 +49,21 @@ int gui_render(struct gui_state *gstate)
     getmaxyx(stdscr, win_h, win_w);
     getbegyx(stdscr, win_t, win_l);
 
+    /* set up main menu dialog */
+    main_menu_dialog.items = NULL;
+    main_menu_dialog.num_items = 0;
+    main_menu_dialog.title = "Main Menu";
+    main_menu_dialog.x = 7;
+    main_menu_dialog.y = 7;
+    main_menu_dialog.w = 80;
+    main_menu_dialog.h = 25;
+
     switch (gstate->focus) {
 
         /* main menu */
         case GUI_FOCUS_MAIN_MENU:
             mvprintw(win_t, win_l, "main menu");
+            gui_render_dialog(&main_menu_dialog);
             break;
 
         /* options menu */
@@ -74,6 +85,8 @@ int gui_render(struct gui_state *gstate)
             break;
     }
 
+    /* set cursor to bottom-right */
+    move(win_t + win_h - 1, win_l + win_w - 1);
     return 0;
 }
 
@@ -113,6 +126,38 @@ int gui_render_endscreen()
         col = win_l + (win_w - 1) / 2 - strlen(messages[i]) / 2;
         mvprintw(row, col, messages[i]);
     }
+
+    return 0;
+}
+
+
+int gui_render_dialog(struct gui_dialog_info *dinfo)
+{
+    /* vars */
+    int x, y;
+
+    /* render corners */
+    mvaddch(dinfo->y,                dinfo->x,                ACS_ULCORNER);
+    mvaddch(dinfo->y,                dinfo->x + dinfo->w - 1, ACS_URCORNER);
+    mvaddch(dinfo->y + dinfo->h - 1, dinfo->x,                ACS_LLCORNER);
+    mvaddch(dinfo->y + dinfo->h - 1, dinfo->x + dinfo->w - 1, ACS_LRCORNER);
+
+    /* render horizontal sides */
+    for (x = dinfo->x + 1; x < dinfo->x + dinfo->w - 1; ++x) {
+        mvaddch(dinfo->y,                x, ACS_HLINE);
+        mvaddch(dinfo->y + dinfo->h - 1, x, ACS_HLINE);
+    }
+
+    /* render vertical sides */
+    for (y = dinfo->y + 1; y < dinfo->y + dinfo->h - 1; ++y) {
+        mvaddch(y, dinfo->x,                ACS_VLINE);
+        mvaddch(y, dinfo->x + dinfo->w - 1, ACS_VLINE);
+    }
+
+    /* render title */
+    y = dinfo->y;
+    x = dinfo->x + dinfo->w / 2 - strlen(dinfo->title) / 2;
+    mvprintw(y, x, dinfo->title);
 
     return 0;
 }

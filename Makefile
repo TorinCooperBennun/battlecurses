@@ -18,9 +18,9 @@
 CC = gcc
 RM = rm -f
 CFLAGS = -O0 -g -Wall -pedantic
-LIBS = -lncurses
+LIBS = -lncurses -lz
 OUT = proj
-OBJS = main.o gui.o
+OBJS = main.o gui.o check.o
 
 all: $(OUT)
 
@@ -33,5 +33,6 @@ $(OUT): $(OBJS)
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-main.o: gui.h
+main.o: gui.h check.h
 gui.o: gui.h
+check.o: check.h
