@@ -58,8 +58,6 @@ int main(int argc, char *argv[])
     if (has_colors() == FALSE) {
 
         /* set up message */
-        dialog_msg.select_pos_x = 0;
-        dialog_msg.select_pos_y = 0;
         dialog_msg.type = GUI_DIALOG_ITEM_MESSAGE;
         dialog_msg.str =
             "Your terminal doesn't seem to support colours! The game will run,"

@@ -21,6 +21,7 @@
 #include "gui.h"
 
 /* standard headers */
+#include <stdlib.h>
 #include <string.h>
 
 /* curses */
@@ -29,8 +30,39 @@
 
 int gui_default_state(struct gui_state *gstate)
 {
+    /* vars */
+    struct gui_dialog_item item;
+    struct gui_dialog_item *item_ptr;
+
+    /* default options */
     gstate->focus = GUI_FOCUS_MAIN_MENU;
     gstate->error = GUI_ERR_OK;
+    gstate->in_game = 0;
+
+    /* allocate for main menu items */
+    item_ptr = (struct gui_dialog_item *) malloc(2 * sizeof(struct gui_dialog_item));
+    gstate->main_menu_dialog.items = item_ptr;
+    gstate->main_menu_dialog.num_items = 2;
+
+    /* New Game */
+    item.str = "New Game";
+    item.type = GUI_DIALOG_ITEM_BUTTON;
+    memcpy(item_ptr, &item, sizeof(item));
+
+    /* Quit */
+    item.str = "Quit";
+    memcpy(++item_ptr, &item, sizeof(item));
+
+    /* set up main menu dialog */
+    gstate->main_menu_dialog.title = "Main Menu";
+    gstate->main_menu_dialog.centered = 1;
+    gstate->main_menu_dialog.autosize = 1;
+    gstate->main_menu_dialog.h_margin = 20;
+    gstate->main_menu_dialog.x = 7;
+    gstate->main_menu_dialog.y = 7;
+    gstate->main_menu_dialog.w = 80;
+    gstate->main_menu_dialog.h = 25;
+
     return 0;
 }
 
@@ -40,7 +72,6 @@ int gui_render(struct gui_state *gstate)
     /* vars */
     int win_w, win_h;
     int win_l, win_t;
-    struct gui_dialog_info main_menu_dialog;
 
     /* clear screen */
     erase();
@@ -49,21 +80,12 @@ int gui_render(struct gui_state *gstate)
     getmaxyx(stdscr, win_h, win_w);
     getbegyx(stdscr, win_t, win_l);
 
-    /* set up main menu dialog */
-    main_menu_dialog.items = NULL;
-    main_menu_dialog.num_items = 0;
-    main_menu_dialog.title = "Main Menu";
-    main_menu_dialog.x = 7;
-    main_menu_dialog.y = 7;
-    main_menu_dialog.w = 80;
-    main_menu_dialog.h = 25;
-
     switch (gstate->focus) {
 
         /* main menu */
         case GUI_FOCUS_MAIN_MENU:
             mvprintw(win_t, win_l, "main menu");
-            gui_render_dialog(&main_menu_dialog);
+            gui_render_dialog(&gstate->main_menu_dialog);
             break;
 
         /* options menu */
@@ -134,30 +156,86 @@ int gui_render_endscreen()
 int gui_render_dialog(struct gui_dialog_info *dinfo)
 {
     /* vars */
+    int win_h, win_w;
+    int win_t, win_l;
     int x, y;
+    int i, len;
+    int tl_x, tl_y;
+    int br_x, br_y;
+    int w, h;
+
+    /* get screen dimensions and top-left coordinates */
+    getmaxyx(stdscr, win_h, win_w);
+    getbegyx(stdscr, win_t, win_l);
+
+    /* no autosize */
+    if (!dinfo->autosize) {
+        w = dinfo->w;
+        h = dinfo->h;
+
+    /* autosize using lengths of contained items */
+    } else {
+        if (!dinfo->num_items) {
+            w = 32;
+            h = 10;
+        } else {
+            h = 5 + dinfo->num_items * 2;
+            w = strlen(dinfo->title);
+            for (i = 0; i < dinfo->num_items; ++i) {
+                len = strlen(dinfo->items[i].str);
+                if (len > w) {
+                    w = len;
+                }
+            }
+            w += dinfo->h_margin * 2;
+        }
+    }
+
+    /* centered */
+    if (dinfo->centered) {
+        tl_x = win_l + win_w / 2 - w / 2;
+        br_x = tl_x + w - 1;
+        tl_y = win_t + win_h / 2 - h / 2;
+        br_y = tl_y + h - 1;
+
+    /* not centered */
+    } else {
+        tl_x = dinfo->x;
+        br_x = tl_x + w - 1;
+        tl_y = dinfo->y;
+        br_y = tl_y + h - 1;
+    }
 
     /* render corners */
-    mvaddch(dinfo->y,                dinfo->x,                ACS_ULCORNER);
-    mvaddch(dinfo->y,                dinfo->x + dinfo->w - 1, ACS_URCORNER);
-    mvaddch(dinfo->y + dinfo->h - 1, dinfo->x,                ACS_LLCORNER);
-    mvaddch(dinfo->y + dinfo->h - 1, dinfo->x + dinfo->w - 1, ACS_LRCORNER);
+    mvaddch(tl_y, tl_x, ACS_ULCORNER);
+    mvaddch(tl_y, br_x, ACS_URCORNER);
+    mvaddch(br_y, tl_x, ACS_LLCORNER);
+    mvaddch(br_y, br_x, ACS_LRCORNER);
 
     /* render horizontal sides */
-    for (x = dinfo->x + 1; x < dinfo->x + dinfo->w - 1; ++x) {
-        mvaddch(dinfo->y,                x, ACS_HLINE);
-        mvaddch(dinfo->y + dinfo->h - 1, x, ACS_HLINE);
+    for (x = tl_x + 1; x < br_x; ++x) {
+        mvaddch(tl_y, x, ACS_HLINE);
+        mvaddch(br_y, x, ACS_HLINE);
     }
 
     /* render vertical sides */
-    for (y = dinfo->y + 1; y < dinfo->y + dinfo->h - 1; ++y) {
-        mvaddch(y, dinfo->x,                ACS_VLINE);
-        mvaddch(y, dinfo->x + dinfo->w - 1, ACS_VLINE);
+    for (y = tl_y + 1; y < br_y; ++y) {
+        mvaddch(y, tl_x, ACS_VLINE);
+        mvaddch(y, br_x, ACS_VLINE);
     }
 
     /* render title */
-    y = dinfo->y;
-    x = dinfo->x + dinfo->w / 2 - strlen(dinfo->title) / 2;
+    y = tl_y;
+    x = (tl_x + br_x) / 2 - strlen(dinfo->title) / 2;
     mvprintw(y, x, dinfo->title);
+
+    /* render items */
+    y = tl_y + 3;
+    for (i = 0; i < dinfo->num_items; ++i) {
+        x = (tl_x + br_x) / 2 - strlen(dinfo->items[i].str) / 2;
+        mvprintw(y, x, dinfo->items[i].str);
+        y += 2;
+    }
 
     return 0;
 }

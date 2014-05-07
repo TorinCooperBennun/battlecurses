@@ -38,26 +38,16 @@ enum gui_error {
 
 /* list of possible dialog item types */
 enum gui_dialog_item_type {
+    GUI_DIALOG_ITEM_BUTTON,
     GUI_DIALOG_ITEM_MESSAGE,
     GUI_DIALOG_ITEM_CHECKBOX,
     GUI_DIALOG_ITEM_RADIOBOX
 };
 
 
-/* structure used to tell renderer what's going on in the GUI */
-struct gui_state {
-    enum gui_focus focus;
-    enum gui_error error;
-};
-
-
 /* structure used for dialog items */
 struct gui_dialog_item {
-    int select_pos_x;
-    int select_pos_y;
-
     char *str;
-
     enum gui_dialog_item_type type;
 };
 
@@ -72,10 +62,24 @@ struct gui_dialog_info {
     int centered;
     int autosize;
 
+    int h_margin;
+
     int x;
     int y;
     int w;
     int h;
+};
+
+
+/* structure used to tell renderer what's going on in the GUI */
+struct gui_state {
+    enum gui_focus focus;
+    enum gui_error error;
+
+    int in_game;
+
+    struct gui_dialog_info main_menu_dialog;
+    struct gui_dialog_info options_dialog;
 };
 
 
