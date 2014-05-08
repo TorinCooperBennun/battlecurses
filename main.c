@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
         /* ask for y/n */
         yn_selected = 0;
         while (!yn_selected) {
-            c = getch();
+            c = wgetch(stdscr);
 
             /* continue as normal if 'y' hit */
             if (c == 'y' || c == 'Y') {
@@ -105,6 +105,9 @@ int main(int argc, char *argv[])
     /* no line buffering */
     raw();
 
+    /* detect return key */
+    nonl();
+
     /* non-echoing getch */
     noecho();
 
@@ -128,7 +131,7 @@ int main(int argc, char *argv[])
         }
 
         /* receive input (ERR received if none) */
-        c = getch();
+        c = wgetch(stdscr);
 
         /* none received, back to top */
         if (c == ERR) {
@@ -148,13 +151,24 @@ int main(int argc, char *argv[])
         switch (c) {
 
             case 'q':
-
-                /* send to quit confirmation */
+                /* send to quit confirmation, if already there then quit */
                 if (gstate.focus != GUI_FOCUS_QUIT_CONFIRM) {
                     gstate.focus = GUI_FOCUS_QUIT_CONFIRM;
-
-                /* already at quit confirmation, quit */
                 } else {
+                    running = 0;
+                }
+                break;
+
+            /* curses is misbehaving, using \r instead of KEY_ENTER */
+            case '\r':
+                if (gstate.focus == GUI_FOCUS_MAIN_MENU) {
+                    if (gstate.selected_item >= gstate.main_menu_dialog.num_items) {
+                        endwin();
+                        fprintf(stderr, "Index of selected dialog item (%d) out of range (main menu)\n", gstate.selected_item);
+                        return -1;
+                    }
+                    gstate.main_menu_dialog.items[gstate.selected_item].callback(&gstate, NULL);
+                } else if (gstate.focus == GUI_FOCUS_QUIT_CONFIRM) {
                     running = 0;
                 }
                 break;
@@ -167,7 +181,7 @@ int main(int argc, char *argv[])
     /* show end splash, quit curses and stop normally */
     gui_render_endscreen();
     timeout(-1);
-    getch();
+    wgetch(stdscr);
     erase();
     refresh();
     endwin();

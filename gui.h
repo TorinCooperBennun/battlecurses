@@ -21,11 +21,18 @@
 #define GUI_H
 
 
+/* list of all structs */
+struct gui_dialog_item;
+struct gui_dialog_info;
+struct gui_state;
+
+
 /* list of possible focuses in the application */
 enum gui_focus {
     GUI_FOCUS_MAIN_MENU,
     GUI_FOCUS_OPTIONS_MENU,
     GUI_FOCUS_GAME,
+    GUI_FOCUS_PAUSE_MENU,
     GUI_FOCUS_QUIT_CONFIRM
 };
 
@@ -49,6 +56,7 @@ enum gui_dialog_item_type {
 struct gui_dialog_item {
     char *str;
     enum gui_dialog_item_type type;
+    int (*callback)(struct gui_state *, void *);
 };
 
 
@@ -80,6 +88,8 @@ struct gui_state {
 
     struct gui_dialog_info main_menu_dialog;
     struct gui_dialog_info options_dialog;
+
+    int selected_item;
 };
 
 

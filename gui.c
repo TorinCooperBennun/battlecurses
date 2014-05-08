@@ -28,6 +28,13 @@
 #include <ncurses.h>
 
 
+static int main_menu_newgame_callback(struct gui_state *gstate, void *data)
+{
+    gstate->focus = GUI_FOCUS_GAME;
+    return 0;
+}
+
+
 int gui_default_state(struct gui_state *gstate)
 {
     /* vars */
@@ -38,6 +45,7 @@ int gui_default_state(struct gui_state *gstate)
     gstate->focus = GUI_FOCUS_MAIN_MENU;
     gstate->error = GUI_ERR_OK;
     gstate->in_game = 0;
+    gstate->selected_item = 0;
 
     /* allocate for main menu items */
     item_ptr = (struct gui_dialog_item *) malloc(2 * sizeof(struct gui_dialog_item));
@@ -47,6 +55,7 @@ int gui_default_state(struct gui_state *gstate)
     /* New Game */
     item.str = "New Game";
     item.type = GUI_DIALOG_ITEM_BUTTON;
+    item.callback = main_menu_newgame_callback;
     memcpy(item_ptr, &item, sizeof(item));
 
     /* Quit */
