@@ -25,7 +25,11 @@
 #include <string.h>
 
 /* curses */
+#ifdef USING_NCURSES
 #include <ncurses.h>
+#else
+#include <curses.h>
+#endif
 
 
 static int main_menu_newgame_callback(struct gui_state *gstate, void *data)

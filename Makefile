@@ -17,7 +17,7 @@
 
 CC = gcc
 RM = rm -f
-CFLAGS = -O0 -g -Wall -pedantic
+CFLAGS = -O0 -g -Wall -pedantic -DUSING_NCURSES
 LIBS = -lncurses -lz
 OUT = proj
 OBJS = main.o gui.o check.o

@@ -23,10 +23,21 @@
 
 /* standard headers */
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 /* curses */
+#ifdef USING_NCURSES
 #include <ncurses.h>
+#else
+#include <curses.h>
+#endif
+
+/* windows if relevant */
+#if defined __CYGWIN__ || defined _WIN16 || defined _WIN32 || defined __WIN32__ || defined __TOS_WIN__ || defined __WINDOWS__
+#define USING_WINDOWS
+#include <windows.h>
+#endif
 
 
 int main(int argc, char *argv[])
@@ -44,6 +55,63 @@ int main(int argc, char *argv[])
 
     /* constants */
     const int check[] = {0x6E, 0x69, 0x67, 0x67, 0x61};
+
+#ifdef USING_WINDOWS
+    /* windows-only vars */
+    HANDLE console_buffer;
+    CONSOLE_SCREEN_BUFFER_INFO old_console_info;
+    COORD console_size;
+    SMALL_RECT console_window;
+    LPTSTR error_string = NULL;
+    DWORD error;
+
+    /* get console handle */
+    console_buffer = GetStdHandle(STD_OUTPUT_HANDLE);
+
+    /* store old console information */
+    res = GetConsoleScreenBufferInfo(console_buffer, &old_console_info);
+    if (!res) {
+        error = GetLastError();
+        res = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, res, 0, error_string, 256, NULL);
+        if (!res || error_string == NULL) {
+            fprintf(stderr, "Setting console size to maximum of (%d, %d) failed, error code %d\n", console_size.X, console_size.Y, (int) error);
+        } else {
+            fprintf(stderr, "Setting console size to maximum of (%d, %d) failed:\n%s\n", console_size.X, console_size.Y, error_string);
+        }
+        return -1;
+    }
+
+    /* make console fill the screen */
+    console_size = GetLargestConsoleWindowSize(console_buffer);
+    console_size.X -= 2;
+    console_size.Y -= 2;
+    res = SetConsoleScreenBufferSize(console_buffer, console_size);
+    if (!res) {
+        error = GetLastError();
+        res = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, res, 0, error_string, 256, NULL);
+        if (!res || error_string == NULL) {
+            fprintf(stderr, "Setting console size to maximum of (%d, %d) failed, error code %d\n", console_size.X, console_size.Y, (int) error);
+        } else {
+            fprintf(stderr, "Setting console size to maximum of (%d, %d) failed:\n%s\n", console_size.X, console_size.Y, error_string);
+        }
+        return -1;
+    }
+    console_window.Left = 0;
+    console_window.Top = 0;
+    console_window.Right = console_size.X - 1;
+    console_window.Bottom = console_size.Y - 1;
+    res = SetConsoleWindowInfo(console_buffer, TRUE, &console_window);
+    if (!res) {
+        error = GetLastError();
+        res = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, res, 0, error_string, 256, NULL);
+        if (!res || error_string == NULL) {
+            fprintf(stderr, "Setting console size to maximum of (%d, %d) failed, error code %d\n", console_size.X, console_size.Y, (int) error);
+        } else {
+            fprintf(stderr, "Setting console size to maximum of (%d, %d) failed:\n%s\n", console_size.X, console_size.Y, error_string);
+        }
+        return -1;
+    }
+#endif
 
     /* process args (none supported currently) */
     if (argc > 1) {
@@ -185,5 +253,17 @@ int main(int argc, char *argv[])
     erase();
     refresh();
     endwin();
+
+#ifdef USING_WINDOWS
+    /* attempt to restore previous console size + position */
+    console_window = old_console_info.srWindow;
+    SetConsoleWindowInfo(console_buffer, TRUE, &console_window);
+    console_size = old_console_info.dwSize;
+    SetConsoleScreenBufferSize(console_buffer, console_size);
+
+    /* clear */
+    system("cls");
+#endif
+
     return 0;
 }
