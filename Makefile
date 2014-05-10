@@ -20,7 +20,7 @@ RM = rm -f
 CFLAGS = -O0 -g -Wall -pedantic -DUSING_NCURSES
 LIBS = -lncurses -lz
 OUT = proj
-OBJS = main.o gui.o check.o
+OBJS = main.o gui.o check.o colours.o
 
 all: $(OUT)
 
@@ -33,6 +33,7 @@ $(OUT): $(OBJS)
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-main.o: gui.h check.h
+main.o: gui.h check.h colours.h
 gui.o: gui.h
 check.o: check.h
+colours.o: colours.h

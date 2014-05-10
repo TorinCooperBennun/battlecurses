@@ -130,16 +130,18 @@ int gui_render(struct gui_state *gstate);
 int gui_render_endscreen();
 
 
-/* gui_render_dialog(struct gui_dialog_info *dinfo)
+/* gui_render_dialog(struct gui_dialog_info *dinfo, int selected_item)
  *
  * Description:
  * Renders a dialog box according to the details specified in the struct pointed
- * to by dinfo. The game's focus should be changed accordingly. Behaviour is undefined if dinfo is NULL.
+ * to by dinfo. The game's focus should be changed accordingly. Behaviour is
+ * undefined if dinfo is NULL. selected_item is the index of the currently
+ * selected item in the dialog.
  *
  * Returns:
  * 0 upon success, -1 upon error.
  */
-int gui_render_dialog(struct gui_dialog_info *dinfo);
+int gui_render_dialog(struct gui_dialog_info *dinfo, int selected_item);
 
 
 #endif

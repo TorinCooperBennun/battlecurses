@@ -19,6 +19,7 @@
 
 /* my headers */
 #include "check.h"
+#include "colours.h"
 #include "gui.h"
 
 /* standard headers */
@@ -42,16 +43,25 @@
 
 int main(int argc, char *argv[])
 {
-    /* vars */
-    struct gui_state gstate;
+    /* gui structures */
+    struct gui_state       gstate;
     struct gui_dialog_info dialog;
     struct gui_dialog_item dialog_msg;
+
+    /* temps */
     int c;
     int yn_selected;
-    int running;
     int res;
-    int tick;
     int next_index;
+
+    /* status */
+    int running;
+    int tick;
+
+    /* global options */
+    /*
+    int server;
+    */
 
     /* constants */
     const int check[] = {0x6E, 0x69, 0x67, 0x67, 0x61};
@@ -122,14 +132,12 @@ int main(int argc, char *argv[])
     /* init curses */
     initscr();
 
-    /* give warning dialog if colors are not supported */
+    /* give warning dialog if colours are not supported */
     if (has_colors() == FALSE) {
 
         /* set up message */
         dialog_msg.type = GUI_DIALOG_ITEM_MESSAGE;
-        dialog_msg.str =
-            "Your terminal doesn't seem to support colours! The game will run,"
-            "but everything will look pretty weird. Continue? (y/n)";
+        dialog_msg.str = "Your terminal doesn't support colours. This will look REALLY weird. Continue? (y/n)";
 
         /* set up dialog info */
         dialog.items = &dialog_msg;
@@ -139,7 +147,7 @@ int main(int argc, char *argv[])
         dialog.autosize = 1;
 
         /* render dialog */
-        gui_render_dialog(&dialog);
+        gui_render_dialog(&dialog, -1);
 
         /* ask for y/n */
         yn_selected = 0;
@@ -159,9 +167,10 @@ int main(int argc, char *argv[])
             }
         }
 
-    /* if colors are supported, init them */
+    /* if colours are supported, init them */
     } else {
         start_color();
+        colours_init();
     }
 
     /* non-blocking read */
@@ -229,17 +238,48 @@ int main(int argc, char *argv[])
 
             /* curses is misbehaving, using \r instead of KEY_ENTER */
             case '\r':
-                if (gstate.focus == GUI_FOCUS_MAIN_MENU) {
-                    if (gstate.selected_item >= gstate.main_menu_dialog.num_items) {
-                        endwin();
-                        fprintf(stderr, "Index of selected dialog item (%d) out of range (main menu)\n", gstate.selected_item);
-                        return -1;
-                    }
-                    gstate.main_menu_dialog.items[gstate.selected_item].callback(&gstate, NULL);
-                } else if (gstate.focus == GUI_FOCUS_QUIT_CONFIRM) {
-                    running = 0;
+                switch (gstate.focus) {
+                    case GUI_FOCUS_MAIN_MENU:
+                        if (gstate.selected_item >= gstate.main_menu_dialog.num_items) {
+                            endwin();
+                            fprintf(stderr, "Index of selected dialog item (%d) out of range (main menu), max is %d\n", gstate.selected_item, gstate.main_menu_dialog.num_items);
+                            return -1;
+                        }
+                        gstate.main_menu_dialog.items[gstate.selected_item].callback(&gstate, NULL);
+                        break;
+
+                    case GUI_FOCUS_QUIT_CONFIRM:
+                        running = 0;
+
+                    default:
+                        break;
                 }
                 break;
+
+            case KEY_UP:
+                switch (gstate.focus) {
+                    case GUI_FOCUS_MAIN_MENU:
+                        --gstate.selected_item;
+                        if (gstate.selected_item < 0) {
+                            gstate.selected_item = gstate.main_menu_dialog.num_items - 1;
+                        }
+
+                    default:
+                        break;
+                }
+                break;
+
+            case KEY_DOWN:
+                switch (gstate.focus) {
+                    case GUI_FOCUS_MAIN_MENU:
+                        ++gstate.selected_item;
+                        if (gstate.selected_item >= gstate.main_menu_dialog.num_items) {
+                            gstate.selected_item = 0;
+                        }
+
+                    default:
+                        break;
+                }
 
             default:
                 break;

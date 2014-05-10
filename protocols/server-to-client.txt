@@ -1,0 +1,173 @@
+--------------------------------------------------------------------------------
+                      BATTLECURSES SERVER-TO-CLIENT PROTOCOL
+
+
+This file uses extended Backus-Naur Form.
+
+
+--------------------------------------------------------------------------------
+                                   DATA TYPES
+
+
+BYTE     = <any 8-bit data sequence> ;
+SHORT    = 2 * BYTE ;
+LONG     = 4 * BYTE ;
+LONGLONG = 8 * BYTE ;
+
+(* interpreted only as being zero or non-zero *)
+BOOL = BYTE ;
+
+NULLCHAR = <a BYTE with decimal representation 0> ;
+
+CHAR         = <a BYTE with decimal representation 0 - 127> ;
+VISIBLE_CHAR = <a BYTE with decimal representation 32 - 126> ;
+LETTER       = <A-Z and a-z, represented as CHAR> ;
+NUMBER       = <0-9, representated as CHAR> ;
+
+STRING              = { CHAR } ;
+ALPHANUMERIC_STRING = { LETTER | NUMBER } ;
+
+
+--------------------------------------------------------------------------------
+                              LENGTHS AND COUNTS
+
+
+(* This is an unsigned integer representing the number of packets that the
+   server has sent so far, excluding the one being currently sent. *)
+
+TICK = LONG ;
+
+
+(* The total length in bytes of the message, excluding the beginning TICK and
+   LENGTH objects (so, the whole length minus 8 bytes). *)
+
+LENGTH = LONG ;
+
+
+--------------------------------------------------------------------------------
+                                   OBJECTS
+
+
+(* Misc. properties. *)
+
+X = SHORT ;
+Y = SHORT ;
+
+COORDINATES = X ,
+              Y ;
+
+OBJECT_COUNT      = SHORT ;
+NUMBER_OF_OBJECTS = <decimal representation of number stored in OBJECT_COUNT> ;
+
+OBJECT_IDENTIFIER = SHORT ;
+
+VELOCITY     = COORDINATES ;
+ACCELERATION = COORDINATES ;
+
+
+(* Object types. *)
+
+TYPE_PLAYER  = 0 ;
+TYPE_BULLET  = 1 ;
+TYPE_MISSILE = 2 ;
+TYPE_ORB     = 3 ;
+TYPE_MINE    = 4 ;
+
+OBJECT_TYPE = TYPE_PLAYER |
+              TYPE_BULLET |
+              TYPE_MISSILE |
+              TYPE_ORB |
+              TYPE_MINE ;
+
+
+(* Object containing information about an event on the map. *)
+
+OBJECT = COORDINATES ,
+         OBJECT_TYPE ,
+         OBJECT_IDENTIFIER ,
+         VELOCITY ,
+         ACCELERATION ,
+         LIFETIME ;
+
+
+(* Sequence of OBJECTs. *)
+
+OBJECT_LIST = OBJECT_COUNT ,
+              NUMBER_OF_OBJECTS * OBJECT ;
+
+
+--------------------------------------------------------------------------------
+                                   PLAYERS
+
+
+(* Misc. properties. *)
+
+PLAYER_IDENTIFIER = SHORT ;
+NAME              = ALPHANUMERIC_STRING , NULLCHAR ;
+KILLS             = SHORT ;
+DEATHS            = SHORT ;
+
+PLAYER_COUNT      = SHORT ;
+NUMBER_OF_PLAYERS = <decimal representation of number stored in PLAYER_COUNT> ;
+
+
+(* The PLAYER structure itself. *)
+
+PLAYER = PLAYER_IDENTIFIER ,
+         NAME ,
+         KILLS ,
+         DEATHS ;
+
+
+(* Sequence of PLAYERs. *)
+
+PLAYER_LIST = PLAYER_COUNT ,
+              NUMBER_OF_PLAYERS * PLAYER ;
+
+
+--------------------------------------------------------------------------------
+                                   STATUS
+
+
+(* self-explanatory *)
+
+ROUND_IN_PROGRESS = BOOL ;
+SECONDS_ELAPSED   = SHORT ;
+SECONDS_REMAINING = SHORT ;
+
+STATUS = ROUND_IN_PROGRESS ,
+         SECONDS_ELAPSED ,
+         SECONDS_REMAINING ;
+
+
+--------------------------------------------------------------------------------
+                                CHAT MESSAGES
+
+
+(* self-explanatory *)
+
+SENDER  = NAME ;
+TIME    = LONG ;
+MESSAGE = TIME , NAME , { VISIBLE_CHAR } , NULLCHAR ;
+
+MESSAGE_COUNT      = LONG ;
+NUMBER_OF_MESSAGES = <decimal representation of number stored in MESSAGE_COUNT> ;
+
+MESSAGE_LIST = MESSAGE_COUNT ,
+               NUMBER_OF_MESSAGES * MESSAGE ;
+
+NEW_CHAT_MESSAGES = MESSAGE_LIST ;
+
+
+--------------------------------------------------------------------------------
+                                   PACKETS
+
+
+(* The full packet as sent by the server. *)
+
+PACKET = TICK ,
+         LENGTH ,
+         STATUS ,
+         OBJECT_LIST ,
+         PLAYER_LIST ,
+         NEW_CHAT_MESSAGES ;

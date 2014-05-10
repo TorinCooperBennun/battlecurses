@@ -18,6 +18,7 @@
 
 
 /* my headers */
+#include "colours.h"
 #include "gui.h"
 
 /* standard headers */
@@ -39,11 +40,28 @@ static int main_menu_newgame_callback(struct gui_state *gstate, void *data)
 }
 
 
+static int main_menu_options_callback(struct gui_state *gstate, void *data)
+{
+    gstate->focus = GUI_FOCUS_OPTIONS_MENU;
+    return 0;
+}
+
+
+static int main_menu_quit_callback(struct gui_state *gstate, void *data)
+{
+    gstate->focus = GUI_FOCUS_QUIT_CONFIRM;
+    return 0;
+}
+
+
 int gui_default_state(struct gui_state *gstate)
 {
     /* vars */
     struct gui_dialog_item item;
     struct gui_dialog_item *item_ptr;
+
+    /* constants */
+    const int main_menu_items = 3;
 
     /* default options */
     gstate->focus = GUI_FOCUS_MAIN_MENU;
@@ -52,9 +70,9 @@ int gui_default_state(struct gui_state *gstate)
     gstate->selected_item = 0;
 
     /* allocate for main menu items */
-    item_ptr = (struct gui_dialog_item *) malloc(2 * sizeof(struct gui_dialog_item));
+    item_ptr = (struct gui_dialog_item *) malloc(main_menu_items * sizeof(struct gui_dialog_item));
     gstate->main_menu_dialog.items = item_ptr;
-    gstate->main_menu_dialog.num_items = 2;
+    gstate->main_menu_dialog.num_items = main_menu_items;
 
     /* New Game */
     item.str = "New Game";
@@ -62,8 +80,14 @@ int gui_default_state(struct gui_state *gstate)
     item.callback = main_menu_newgame_callback;
     memcpy(item_ptr, &item, sizeof(item));
 
+    /* Options */
+    item.str = "Options";
+    item.callback = main_menu_options_callback;
+    memcpy(++item_ptr, &item, sizeof(item));
+
     /* Quit */
     item.str = "Quit";
+    item.callback = main_menu_quit_callback;
     memcpy(++item_ptr, &item, sizeof(item));
 
     /* set up main menu dialog */
@@ -71,10 +95,13 @@ int gui_default_state(struct gui_state *gstate)
     gstate->main_menu_dialog.centered = 1;
     gstate->main_menu_dialog.autosize = 1;
     gstate->main_menu_dialog.h_margin = 20;
+
+    /*
     gstate->main_menu_dialog.x = 7;
     gstate->main_menu_dialog.y = 7;
     gstate->main_menu_dialog.w = 80;
     gstate->main_menu_dialog.h = 25;
+    */
 
     return 0;
 }
@@ -93,12 +120,15 @@ int gui_render(struct gui_state *gstate)
     getmaxyx(stdscr, win_h, win_w);
     getbegyx(stdscr, win_t, win_l);
 
+    mvprintw(2, 4, "%d", gstate->main_menu_dialog.num_items);
+    mvprintw(3, 4, "%d", gstate->selected_item);
+
     switch (gstate->focus) {
 
         /* main menu */
         case GUI_FOCUS_MAIN_MENU:
             mvprintw(win_t, win_l, "main menu");
-            gui_render_dialog(&gstate->main_menu_dialog);
+            gui_render_dialog(&gstate->main_menu_dialog, gstate->selected_item);
             break;
 
         /* options menu */
@@ -166,7 +196,7 @@ int gui_render_endscreen()
 }
 
 
-int gui_render_dialog(struct gui_dialog_info *dinfo)
+int gui_render_dialog(struct gui_dialog_info *dinfo, int selected_item)
 {
     /* vars */
     int win_h, win_w;
@@ -219,6 +249,8 @@ int gui_render_dialog(struct gui_dialog_info *dinfo)
         br_y = tl_y + h - 1;
     }
 
+    attron(COLOR_PAIR(COLOUR_DIALOG_BORDER));
+
     /* render corners */
     mvaddch(tl_y, tl_x, ACS_ULCORNER);
     mvaddch(tl_y, br_x, ACS_URCORNER);
@@ -237,18 +269,40 @@ int gui_render_dialog(struct gui_dialog_info *dinfo)
         mvaddch(y, br_x, ACS_VLINE);
     }
 
+    attroff(COLOR_PAIR(COLOUR_DIALOG_BORDER));
+
+    attron(COLOR_PAIR(COLOUR_DIALOG_TITLE));
+
     /* render title */
     y = tl_y;
     x = (tl_x + br_x) / 2 - strlen(dinfo->title) / 2;
     mvprintw(y, x, dinfo->title);
 
+    attroff(COLOR_PAIR(COLOUR_DIALOG_TITLE));
+
+    attron(COLOR_PAIR(COLOUR_DIALOG_TEXT));
+
     /* render items */
     y = tl_y + 3;
     for (i = 0; i < dinfo->num_items; ++i) {
         x = (tl_x + br_x) / 2 - strlen(dinfo->items[i].str) / 2;
+
+        if (i == selected_item) {
+            attroff(COLOR_PAIR(COLOUR_DIALOG_TEXT));
+            attron(COLOR_PAIR(COLOUR_DIALOG_SELECTED));
+        }
+
         mvprintw(y, x, dinfo->items[i].str);
+
+        if (i == selected_item) {
+            attroff(COLOR_PAIR(COLOUR_DIALOG_SELECTED));
+            attron(COLOR_PAIR(COLOUR_DIALOG_TEXT));
+        }
+
         y += 2;
     }
+
+    attroff(COLOR_PAIR(COLOUR_DIALOG_TEXT));
 
     return 0;
 }
