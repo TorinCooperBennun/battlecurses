@@ -113,6 +113,9 @@ int gui_render(struct gui_state *gstate)
     int win_w, win_h;
     int win_l, win_t;
 
+    /* temps */
+    int x, y;
+
     /* clear screen */
     erase();
 
@@ -120,14 +123,21 @@ int gui_render(struct gui_state *gstate)
     getmaxyx(stdscr, win_h, win_w);
     getbegyx(stdscr, win_t, win_l);
 
-    mvprintw(2, 4, "%d", gstate->main_menu_dialog.num_items);
-    mvprintw(3, 4, "%d", gstate->selected_item);
-
     switch (gstate->focus) {
 
         /* main menu */
         case GUI_FOCUS_MAIN_MENU:
-            mvprintw(win_t, win_l, "main menu");
+
+            /* render background */
+            attron(COLOR_PAIR(COLOUR_MENU_BACKGROUND));
+            for (x = win_l; x < win_l + win_w; ++x) {
+                for (y = win_t; y < win_t + win_h; ++y) {
+                    mvaddch(y, x, ' ');
+                }
+            }
+            attroff(COLOR_PAIR(COLOUR_MENU_BACKGROUND));
+
+            /* render dialog */
             gui_render_dialog(&gstate->main_menu_dialog, gstate->selected_item);
             break;
 
@@ -279,6 +289,17 @@ int gui_render_dialog(struct gui_dialog_info *dinfo, int selected_item)
     mvprintw(y, x, dinfo->title);
 
     attroff(COLOR_PAIR(COLOUR_DIALOG_TITLE));
+
+    attron(COLOR_PAIR(COLOUR_DIALOG_BACKGROUND));
+
+    /* render background */
+    for (x = tl_x + 1; x < br_x; ++x) {
+        for (y = tl_y + 1; y < br_y; ++y) {
+            mvaddch(y, x, ' ');
+        }
+    }
+
+    attroff(COLOR_PAIR(COLOUR_DIALOG_BACKGROUND));
 
     attron(COLOR_PAIR(COLOUR_DIALOG_TEXT));
 
