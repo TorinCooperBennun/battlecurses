@@ -20,7 +20,7 @@ RM = rm -f
 CFLAGS = -O0 -g -Wall -pedantic -DUSING_NCURSES
 LIBS = -lncurses -lz
 OUT = proj
-OBJS = main.o gui.o check.o colours.o
+OBJS = main.o gui.o check.o colours.o game.o
 
 all: $(OUT)
 

@@ -55,8 +55,8 @@ int main(int argc, char *argv[])
     int next_index;
 
     /* status */
-    int running;
-    int tick;
+    int      running;
+    unsigned tick;
 
     /* global options */
     /*
