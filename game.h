@@ -30,12 +30,22 @@ enum game_tile_type {
 };
 
 
+/* list of item types */
+enum game_item_type {
+    GAME_ITEM_REVOLVER
+};
+
+
+/* structure containing info for an item */
+struct game_item {
+};
+
+
 /* structure containing info for a single tile */
 struct game_tile {
     enum game_tile_type type;
 
-    struct game_item *items;
-    int num_items;
+    struct game_item item;
 };
 
 
