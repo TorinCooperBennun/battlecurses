@@ -19,7 +19,7 @@ CC = gcc
 RM = rm -f
 CFLAGS = -O0 -g -Wall -pedantic -DUSING_NCURSES
 LIBS = -lncurses -lz
-OUT = proj
+OUT = battlecurses
 OBJS = main.o gui.o check.o colours.o
 
 all: $(OUT)

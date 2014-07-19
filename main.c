@@ -236,7 +236,7 @@ int main(int argc, char *argv[])
                 }
                 break;
 
-            /* curses is misbehaving, using \r instead of KEY_ENTER */
+            /* curses seems to use \r instead of KEY_ENTER */
             case '\r':
                 switch (gstate.focus) {
                     case GUI_FOCUS_MAIN_MENU:
